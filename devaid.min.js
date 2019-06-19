@@ -1,7 +1,7 @@
 /*!
 DevAid 
 v1.1.2
-github
+https://github.com/axelsvanfeldt/DevAid
 axel.svanfeldt@gmail.com
 https://codeant.se
 */
