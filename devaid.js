@@ -1,16 +1,15 @@
 /*!
 DevAid 
-v1.1.3
+v1.1.4
 https://github.com/axelsvanfeldt/DevAid
 axel.svanfeldt@gmail.com
 https://codeant.se
 */
+'use strict';
+
 let devaid = {
-    log: (msg) => {
-        console.log(`DevAid: ${msg}`);
-    },
     cfg: {
-        initiated: [],
+        features: [],
         navbar: {
             content: '',
             background_color: '#333',
@@ -87,15 +86,48 @@ let devaid = {
             return val;
         },        
     },
+    log: (msg) => {
+        console.log(`DevAid: ${msg}`);
+    },
+    awaitDOM: (feature, callback, init = true) => {
+        if (devaid.allowAction(feature, init)) {
+            if (init) {
+                devaid.cfg.features.push(feature);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    callback();
+                });
+            }
+            else {
+                callback();
+            }
+        }
+    },
+    allowAction: (feature, init) => {
+        if (init) {
+            if (devaid.cfg.features.indexOf(feature) == -1) {
+                devaid.cfg.features.push(feature);
+                return true;
+            }
+            return false;
+        }
+        else {
+            if (devaid.cfg.features.indexOf(feature) == -1) {
+                devaid.log(`You need to initiate ${feature} before dynamically adding a new one!`);
+                return false;
+            }
+            return true;
+        }
+    },
     navbar: {
         init: (options = {}) => {
-            if (devaid.cfg.initiated.indexOf('navbar') == -1) {
-                devaid.cfg.initiated.push('navbar');
+            devaid.awaitDOM('navbar', () => {
                 devaid.cfg.edit('navbar', options);
                 devaid.css.get('navbar');
                 devaid.navbar.renderHtml();
                 window.addEventListener('scroll', devaid.navbar.toggleNavbar);
-            }
+            });
         },
         renderHtml: () => {
             let navbar = document.querySelector('#devaid-navbar');
@@ -126,13 +158,12 @@ let devaid = {
     },
     placeholders: {
         init: (options = {}) => {
-            if (devaid.cfg.initiated.indexOf('placeholders') == -1) {
-                devaid.cfg.initiated.push('placeholders');
+            devaid.awaitDOM('placeholders', () => {
                 devaid.cfg.edit('placeholders', options);
                 devaid.css.get('placeholders');
                 devaid.placeholders.addListeners();
-            }
-        },
+            });            
+        },     
         addListeners: () => {
             let imgs = document.querySelectorAll("img");
             imgs.forEach((el) => {
@@ -161,13 +192,12 @@ let devaid = {
     },    
     popup: {
         init: (options = {}) => {
-            if (devaid.cfg.initiated.indexOf('popup') == -1) {
-                devaid.cfg.initiated.push('popup');
+            devaid.awaitDOM('popup', () => {
                 devaid.cfg.edit('popup', options);
                 devaid.css.get('popup');
                 devaid.popup.renderHtml();
                 devaid.popup.addListeners();
-            }
+            });            
         },
         renderHtml: () => {
             if (!document.querySelector('#devaid-popup-overlay')) {
@@ -193,7 +223,7 @@ let devaid = {
             });
         },
         add: (data = {}) => {
-            if (devaid.cfg.initiated.indexOf('popup') != -1) {
+            devaid.awaitDOM('popup', () => {
                 if (data.hasOwnProperty('id') && data.hasOwnProperty('content')) {
                     devaid.popup.renderHtml();
                     let overlay = document.querySelector('#devaid-popup-overlay'),
@@ -227,10 +257,7 @@ let devaid = {
                 else {
                     devaid.log(`You need to include valid 'id' and 'content' properties to add a popup!`);
                 }
-            }
-            else {
-                devaid.log(`You need to initiate popups before dynamically adding a new one!`);
-            }
+            }, false);
         },
         open: (popup) => {
             if (popup) {
@@ -262,14 +289,13 @@ let devaid = {
     },
     scrollbar: {
         init: (options = {}) => {
-            if (devaid.cfg.initiated.indexOf('scrollbar') == -1) {
-                devaid.cfg.initiated.push('scrollbar');
+            devaid.awaitDOM('scrollbar', () => {
                 devaid.cfg.edit('scrollbar', options);
                 devaid.css.get('scrollbar');
                 devaid.scrollbar.renderHtml();
                 devaid.scrollbar.moveThumb();
                 window.addEventListener('scroll', devaid.scrollbar.moveThumb);
-            }
+            });
         },
         renderHtml: () => {
             if (!document.querySelector('#devaid-scrollbar-track')) {
@@ -291,14 +317,13 @@ let devaid = {
     },    
     tooltip: {
         init: (options = {}) => {
-            if (devaid.cfg.initiated.indexOf('tooltip') == -1) {
-                devaid.cfg.initiated.push('tooltip');
+            devaid.awaitDOM('tooltip', () => {
                 devaid.cfg.edit('tooltip', options);
                 devaid.css.get('tooltip');
-            }
+            });
         },
         add: (data = {}) => {
-            if (devaid.cfg.initiated.indexOf('tooltip') != -1) {
+            devaid.awaitDOM('tooltip', () => {
                 if (data.hasOwnProperty('selector') && data.hasOwnProperty('content')) {
                     let els = document.querySelectorAll(data.selector);
                     els.forEach((el) => {
@@ -315,10 +340,7 @@ let devaid = {
                 else {
                     devaid.log(`You need to include valid 'selector' and 'content' properties to add a tooltip!`);
                 }
-            }
-            else {
-                devaid.log(`You need to initiate tooltips before dynamically adding a new one!`);
-            }
+            }, false);
         }
     },
     css: {
