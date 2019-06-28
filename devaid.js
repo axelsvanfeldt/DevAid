@@ -1,6 +1,6 @@
 /*!
 DevAid 
-v1.1.4
+v1.1.5
 https://github.com/axelsvanfeldt/DevAid
 axel.svanfeldt@gmail.com
 https://codeant.se
@@ -114,7 +114,7 @@ let devaid = {
         }
         else {
             if (devaid.cfg.features.indexOf(feature) == -1) {
-                devaid.log(`You need to initiate ${feature} before dynamically adding a new one!`);
+                devaid.log(`You need to initiate ${feature} before dynamically adding/triggering a new one!`);
                 return false;
             }
             return true;
@@ -211,10 +211,7 @@ let devaid = {
                 if (e.target && e.target.classList.contains('devaid-popup-trigger')) {
                     let dataVal = e.target.dataset.popup;
                     if (dataVal) {
-                        let popup = document.getElementById(dataVal);
-                        if (popup) {
-                            devaid.popup.open(popup);
-                        }
+                        devaid.popup.open(dataVal);
                     }
                 }
                 else if (e.target && (e.target.id == 'devaid-popup-overlay' || e.target.classList.contains('devaid-popup-close'))) {
@@ -250,7 +247,7 @@ let devaid = {
                     overlay.appendChild(popup);
                     if (data.hasOwnProperty('open')) {
                         if (data.open) {
-                            devaid.popup.open(popup);
+                            devaid.popup.open(data.id);
                         }
                     }
                 }
@@ -259,7 +256,18 @@ let devaid = {
                 }
             }, false);
         },
-        open: (popup) => {
+        trigger: (data = {}) => {
+            devaid.awaitDOM('popup', () => {
+                if (data.hasOwnProperty('id') && data.hasOwnProperty('selectors')) {
+                    document.querySelectorAll(data.selectors).forEach((el) => {
+                        el.classList.add('devaid-popup-trigger');
+                        el.dataset.popup = data.id;
+                    });
+                }
+            }, false);
+        },
+        open: (id) => {
+            let popup = document.getElementById(id);
             if (popup) {
                 document.documentElement.style.overflow = 'hidden';
                 document.body.style.overflow = 'hidden';
@@ -267,25 +275,28 @@ let devaid = {
                 popup.style.display = 'block';
                 popup.classList.add('devaid-popup-open');
             }
-        },
-        close: (e) => {
-            let close = false;
-            if (e.target.id == 'devaid-popup-overlay') {
-                close = true;
+            else {
+                devaid.log(`A popup with the id '${id}' must be rendered before it opens!`);
             }
-            else if (e.target.classList.contains('devaid-popup-close')) {
-                close = true;
+        },
+        close: (e = false) => {
+            let close = true;
+            if (e) {
+                close = false;
+                if (e.target.id == 'devaid-popup-overlay' || e.target.classList.contains('devaid-popup-close')) {
+                    close = true;
+                }
             }
             if (close) {
-                document.querySelectorAll('.devaid-popup').forEach(function(thisPopup) {
-                    thisPopup.classList.remove('devaid-popup-open');
-                    thisPopup.style.display = 'none';
+                document.querySelectorAll('.devaid-popup').forEach((popup) => {
+                    popup.classList.remove('devaid-popup-open');
+                    popup.style.display = 'none';
                 });
                 document.querySelector('#devaid-popup-overlay').style.display = 'none';
                 document.documentElement.style.overflow = 'auto';
                 document.body.style.overflow = 'auto';
             }
-        },        
+        },
     },
     scrollbar: {
         init: (options = {}) => {
@@ -321,7 +332,7 @@ let devaid = {
                 devaid.cfg.edit('tooltip', options);
                 devaid.css.get('tooltip');
             });
-        },
+        },       
         add: (data = {}) => {
             devaid.awaitDOM('tooltip', () => {
                 if (data.hasOwnProperty('selector') && data.hasOwnProperty('content')) {
