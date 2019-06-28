@@ -25,7 +25,7 @@ While the navbar also can rendered in pure HTML with `<div id="devaid-navbar">YO
 ## Scrollbar
 DevAid contains a feature to replace the default browser window scrollbar with a much more appealing and modern scrollbar.
 
-`devaid.scrollbar.init()` - Initiates and renders the navbar.
+`devaid.scrollbar.init()` - Initiates and renders the scrollbar.
 
 Accepts an optional parameter containing an object with the following properties:
 * `thumb_color` - (String. Any color valid in HTML) The thumb color of the replacement scrollbar. Defaults to `#ff9900`.
@@ -36,20 +36,17 @@ Accepts an optional parameter containing an object with the following properties
 While the scrollbar also can rendered in pure HTML with `<div id="devaid-scrollbar-track"><div id="devaid-scrollbar-thumb"></div></div>`, you will still need to call `devaid.scrollbar.init()` for it to work properly.
 
 ## Placeholders
-devaid.placeholders.init({url: 'www...'});
+Placeholders are used replace or completely remove images with invalid sources.
+
+`devaid.placeholders.init()` - Initiates and replaces faulty sources.
+
+Accepts an optional parameter containing an object with the following properties:
+* `url` - (String. Any valid URL) The URL of the replacement source. Defaults to `''` which removes the image completely.
+* `height` - (String. Any value in pixels or auto) The thumb color of the replacement scrollbar. Defaults to `auto`.
+* `width` - (String. Any value in pixels or auto) The thumb color of the replacement scrollbar. Defaults to `auto`.
 
 ## Tooltips
-devaid.tooltip.init();
-devaid.tooltip.add({
-    selector: 'li',
-    content: 'test'
-});
+...
 
 ## Popups
-devaid.popup.init();
-devaid.popup.add({
-    id: 'test',
-    header: 'My Popup Header2',
-    content: '<p>Praesent sodales tristique dolor id tristique. Curabitur et mi ante. Vivamus dignissim nibh ac leo faucibus interdum. Etiam laoreet maximus iaculis. Aenean posuere non elit pulvinar pharetra. Cras varius porttitor nisi, vitae lobortis turpis mollis eu. Pellentesque accumsan congue cursus. Ut id velit vel nunc mattis tincidunt.</p>',
-    open: true,
-});
+...

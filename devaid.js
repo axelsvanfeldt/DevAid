@@ -1,6 +1,6 @@
 /*!
 DevAid 
-v1.1.2
+v1.1.3
 https://github.com/axelsvanfeldt/DevAid
 axel.svanfeldt@gmail.com
 https://codeant.se
@@ -15,12 +15,19 @@ let devaid = {
             content: '',
             background_color: '#333',
             text_color: '#fff',
+            scroll_pos: 0
         },
         popup: {
             background_color: '#f2f2f2',
             text_color: '#444',
             close_button: true
-        }, 
+        },
+        placeholders: {
+            url: '',
+            height: 'auto',
+            width: 'auto',
+            errors: []
+        },
         scrollbar: {
             thumb_color: '#ff9900',
             track_color: 'rgba(0,0,0,0.15)',
@@ -33,7 +40,7 @@ let devaid = {
             margin_top: '4px',
             width: '70px',
             border_radius: '2px',
-            arrow: true,
+            arrow: true
         },
         edit: (feature, options) => {
             if (typeof options === 'object' && options !== null) {
@@ -48,21 +55,32 @@ let devaid = {
             }
         },
         validate: (feature, option, val) => {
-            if (option.includes('color')) {
-                let el = document.createElement('div');
-                el.style.backgroundColor = val;
-                val = el.style.backgroundColor ? val : false;
-            }
-            else if (option.includes('width') || option.includes('margin') || option.includes('radius')) {
-                let intVal = parseInt(val);
-                val = isNaN(intVal) ? false : `${intVal}px`;
-            }       
-            else if (option == 'track_style') {
+            if (option == 'track_style') {
                 val = ['dashed', 'dotted', 'solid', 'double', 'none'].indexOf(val) == -1 ? false : val;
             }
             else if (option == 'arrow' || option == 'close_button') {
                 val = typeof val === 'boolean' ? val : false;
             }
+            else if (option == 'url') {
+                var exp = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+                var regex = new RegExp(exp);
+                val = val.match(regex) ? val : false;             
+            }
+            else if (option == 'height' || option == 'width') {
+                if (val !== 'auto') {
+                    let intVal = parseInt(val);
+                    val = isNaN(intVal) ? false : `${intVal}px`;
+                }
+            }
+            else if (option.includes('height') || option.includes('width') || option.includes('margin') || option.includes('radius')) {
+                let intVal = parseInt(val);
+                val = isNaN(intVal) ? false : `${intVal}px`;
+            }
+            else if (option.includes('color')) {
+                let el = document.createElement('div');
+                el.style.backgroundColor = val;
+                val = el.style.backgroundColor ? val : false;
+            }            
             if (!val) {
                 devaid.log(`You have entered an invalid '${option}' value in your ${feature}!`);
             }
@@ -71,11 +89,13 @@ let devaid = {
     },
     navbar: {
         init: (options = {}) => {
-            devaid.cfg.initiated.push('navbar');
-            devaid.cfg.edit('navbar', options);
-            devaid.css.get('navbar');
-            devaid.navbar.renderHtml();
-            window.addEventListener('scroll', devaid.navbar.toggleNavbar);
+            if (devaid.cfg.initiated.indexOf('navbar') == -1) {
+                devaid.cfg.initiated.push('navbar');
+                devaid.cfg.edit('navbar', options);
+                devaid.css.get('navbar');
+                devaid.navbar.renderHtml();
+                window.addEventListener('scroll', devaid.navbar.toggleNavbar);
+            }
         },
         renderHtml: () => {
             let navbar = document.querySelector('#devaid-navbar');
@@ -91,7 +111,6 @@ let devaid = {
                 document.body.appendChild(navbar);
             }
         },
-        scrollPos: 0,
         toggleNavbar: () => {
             let navbar = document.querySelector('#devaid-navbar'),
                 navHeight = navbar.offsetHeight,
@@ -100,18 +119,55 @@ let devaid = {
                 navbar.style.top = '0px';
             }
             else {
-                navbar.style.top = pos < devaid.navbar.scrollPos ? '0px' : `-${navHeight}px`;
+                navbar.style.top = pos < devaid.cfg.navbar.scroll_pos ? '0px' : `-${navHeight}px`;
             }
-            devaid.navbar.scrollPos = pos;
+            devaid.cfg.navbar.scroll_pos = pos;
         }
     },
+    placeholders: {
+        init: (options = {}) => {
+            if (devaid.cfg.initiated.indexOf('placeholders') == -1) {
+                devaid.cfg.initiated.push('placeholders');
+                devaid.cfg.edit('placeholders', options);
+                devaid.css.get('placeholders');
+                devaid.placeholders.addListeners();
+            }
+        },
+        addListeners: () => {
+            let imgs = document.querySelectorAll("img");
+            imgs.forEach((el) => {
+                el.onerror = (e) => {
+                    devaid.placeholders.replaceImage(e);
+                };
+            });
+        },
+        replaceImage: (e) => {
+            var img = e.target;
+            if (devaid.cfg.placeholders.errors.indexOf(img.src) == -1) {
+                devaid.cfg.placeholders.errors.push(img.src);
+                if (devaid.cfg.placeholders.url) {
+                    img.classList.add('devaid-placeholder');
+                    img.src = devaid.cfg.placeholders.url;
+                }
+                else {
+                    img.parentNode.removeChild(img);
+                }
+            }
+            else {
+                devaid.log(`The URL you have provided for image placeholders is invalid. Removing image from the DOM...`);
+                img.parentNode.removeChild(img);
+            }
+        }
+    },    
     popup: {
         init: (options = {}) => {
-            devaid.cfg.initiated.push('popup');
-            devaid.cfg.edit('popup', options);
-            devaid.css.get('popup');
-            devaid.popup.renderHtml();
-            devaid.popup.addListeners();
+            if (devaid.cfg.initiated.indexOf('popup') == -1) {
+                devaid.cfg.initiated.push('popup');
+                devaid.cfg.edit('popup', options);
+                devaid.css.get('popup');
+                devaid.popup.renderHtml();
+                devaid.popup.addListeners();
+            }
         },
         renderHtml: () => {
             if (!document.querySelector('#devaid-popup-overlay')) {
@@ -139,9 +195,7 @@ let devaid = {
         add: (data = {}) => {
             if (devaid.cfg.initiated.indexOf('popup') != -1) {
                 if (data.hasOwnProperty('id') && data.hasOwnProperty('content')) {
-                    if (!document.querySelector('#devaid-popup-overlay')) {
-                        devaid.popup.renderHtml();
-                    }
+                    devaid.popup.renderHtml();
                     let overlay = document.querySelector('#devaid-popup-overlay'),
                         popup = document.createElement('div'),
                         contentEl = document.createElement('div');
@@ -208,12 +262,14 @@ let devaid = {
     },
     scrollbar: {
         init: (options = {}) => {
-            devaid.cfg.initiated.push('scrollbar');
-            devaid.cfg.edit('scrollbar', options);
-            devaid.css.get('scrollbar');
-            devaid.scrollbar.renderHtml();
-            devaid.scrollbar.moveThumb();
-            window.addEventListener('scroll', devaid.scrollbar.moveThumb);
+            if (devaid.cfg.initiated.indexOf('scrollbar') == -1) {
+                devaid.cfg.initiated.push('scrollbar');
+                devaid.cfg.edit('scrollbar', options);
+                devaid.css.get('scrollbar');
+                devaid.scrollbar.renderHtml();
+                devaid.scrollbar.moveThumb();
+                window.addEventListener('scroll', devaid.scrollbar.moveThumb);
+            }
         },
         renderHtml: () => {
             if (!document.querySelector('#devaid-scrollbar-track')) {
@@ -235,9 +291,11 @@ let devaid = {
     },    
     tooltip: {
         init: (options = {}) => {
-            devaid.cfg.initiated.push('tooltip');
-            devaid.cfg.edit('tooltip', options);
-            devaid.css.get('tooltip');
+            if (devaid.cfg.initiated.indexOf('tooltip') == -1) {
+                devaid.cfg.initiated.push('tooltip');
+                devaid.cfg.edit('tooltip', options);
+                devaid.css.get('tooltip');
+            }
         },
         add: (data = {}) => {
             if (devaid.cfg.initiated.indexOf('tooltip') != -1) {
@@ -281,6 +339,13 @@ let devaid = {
                     -webkit-transition: all 0.23s;
                     -moz-transition: all 0.23s;
                     transition: all 0.23s;
+                }`;
+            }
+            else if (feature == 'placeholders') {
+                css = `
+                .devaid-placeholder {
+                    height: ${devaid.cfg.placeholders.height};
+                    width: ${devaid.cfg.placeholders.width};
                 }`;
             }
             else if (feature == 'popup') {
@@ -431,21 +496,20 @@ let devaid = {
                     }`;
                 }
             }
-            devaid.css.render(`devaid-${feature}-style`, css);
+            devaid.css.render(css);
         },
-        render: (id, css) => {
-            if (!document.querySelector(`#${id}`)) {
-                let head = document.head || document.getElementsByTagName('head')[0],
-                    style = document.createElement('style');
-                style.id = id;
+        render: (css) => {
+            let style = document.querySelector(`#devaid-style`);
+            if (style) {
+                style.appendChild(document.createTextNode(css)); 
+            } 
+            else {
+                let head = document.head || document.getElementsByTagName('head')[0];
+                style = document.createElement('style');
+                style.id = 'devaid-style';
                 style.type = 'text/css';
                 head.appendChild(style);
-                if (style.styleSheet) {
-                    style.styleSheet.cssText = css;
-                }
-                else {
-                    style.appendChild(document.createTextNode(css));
-                }             
+                style.appendChild(document.createTextNode(css));         
             }
         },
     },
@@ -456,19 +520,21 @@ if (document.readyState === 'interactive' || document.readyState === 'complete')
 }
 else {
     document.addEventListener('DOMContentLoaded', () => {
+        devaid.placeholders.init({url: 'https://codeant.se/img/projects/cavs.png', width: '100px'});
         devaid.navbar.init();
-        devaid.scrollbar.init({track_style: 'solid'});
+        devaid.scrollbar.init();
         devaid.tooltip.init();
         devaid.tooltip.add({
             selector: 'li',
             content: 'test'
         });
         devaid.popup.init();
-        /*devaid.popup.add({
+        devaid.popup.add({
             id: 'test',
-            header: 'My Popup Header',
+            header: 'My Popup Header2',
             content: '<p>Praesent sodales tristique dolor id tristique. Curabitur et mi ante. Vivamus dignissim nibh ac leo faucibus interdum. Etiam laoreet maximus iaculis. Aenean posuere non elit pulvinar pharetra. Cras varius porttitor nisi, vitae lobortis turpis mollis eu. Pellentesque accumsan congue cursus. Ut id velit vel nunc mattis tincidunt.</p>',
             open: true,
-        });*/
+        });
     });
 }
+
