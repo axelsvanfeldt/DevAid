@@ -514,27 +514,3 @@ let devaid = {
         },
     },
 }
-
-if (document.readyState === 'interactive' || document.readyState === 'complete') {
-    devaid.scrollbar.init({thumb_color: '#FFF', track_style: 'solid'});
-}
-else {
-    document.addEventListener('DOMContentLoaded', () => {
-        devaid.placeholders.init({url: 'https://codeant.se/img/projects/cavs.png', width: '100px'});
-        devaid.navbar.init();
-        devaid.scrollbar.init();
-        devaid.tooltip.init();
-        devaid.tooltip.add({
-            selector: 'li',
-            content: 'test'
-        });
-        devaid.popup.init();
-        devaid.popup.add({
-            id: 'test',
-            header: 'My Popup Header2',
-            content: '<p>Praesent sodales tristique dolor id tristique. Curabitur et mi ante. Vivamus dignissim nibh ac leo faucibus interdum. Etiam laoreet maximus iaculis. Aenean posuere non elit pulvinar pharetra. Cras varius porttitor nisi, vitae lobortis turpis mollis eu. Pellentesque accumsan congue cursus. Ut id velit vel nunc mattis tincidunt.</p>',
-            open: true,
-        });
-    });
-}
-
