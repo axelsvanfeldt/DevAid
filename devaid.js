@@ -335,8 +335,8 @@ let devaid = {
         },       
         add: (data = {}) => {
             devaid.awaitDOM('tooltip', () => {
-                if (data.hasOwnProperty('selector') && data.hasOwnProperty('content')) {
-                    let els = document.querySelectorAll(data.selector);
+                if (data.hasOwnProperty('selectors') && data.hasOwnProperty('content')) {
+                    let els = document.querySelectorAll(data.selectors);
                     els.forEach((el) => {
                         el.classList.add('devaid-tooltip-trigger');
                         if (!el.querySelector('.devaid-tooltip-content')) {
@@ -349,7 +349,7 @@ let devaid = {
                     });
                 }
                 else {
-                    devaid.log(`You need to include valid 'selector' and 'content' properties to add a tooltip!`);
+                    devaid.log(`You need to include valid 'selectors' and 'content' properties to add a tooltip!`);
                 }
             }, false);
         }
