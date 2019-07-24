@@ -7,7 +7,7 @@ https://codeant.se
 */
 'use strict';
 
-let devaid = {
+const devaid = {
     cfg: {
         features: [],
         navbar: {
@@ -76,7 +76,7 @@ let devaid = {
                 val = isNaN(intVal) ? false : `${intVal}px`;
             }
             else if (option.includes('color')) {
-                let el = document.createElement('div');
+                const el = document.createElement('div');
                 el.style.backgroundColor = val;
                 val = el.style.backgroundColor ? val : false;
             }            
@@ -304,8 +304,11 @@ let devaid = {
                 devaid.cfg.edit('scrollbar', options);
                 devaid.css.get('scrollbar');
                 devaid.scrollbar.renderHtml();
+                devaid.scrollbar.toggle();
                 devaid.scrollbar.moveThumb();
                 window.addEventListener('scroll', devaid.scrollbar.moveThumb);
+                window.addEventListener('resize', devaid.scrollbar.toggle);
+                document.body.addEventListener('resize', devaid.scrollbar.toggle);
             });
         },
         renderHtml: () => {
@@ -318,11 +321,15 @@ let devaid = {
                 document.body.appendChild(track);
             }
         },
+        toggle: () => {
+            document.querySelector('#devaid-scrollbar-track').style.display = window.innerHeight < document.documentElement.scrollHeight ? 'block' : 'none';
+        },
         moveThumb: () => {
-            let scrollHeight = document.body.scrollHeight - window.innerHeight,
+            let scrollHeight = document.documentElement.scrollHeight - window.innerHeight,
                 percentage = window.scrollY / scrollHeight,
                 trackHeight = document.querySelector('#devaid-scrollbar-track').clientHeight,
-                thumbMargin = Math.round(trackHeight * percentage) - 10;
+                thumbMargin = Math.round(trackHeight * percentage) - 9;
+                //console.log(document.body.scrollHeight, window.innerHeight);
             document.querySelector('#devaid-scrollbar-thumb').style.marginTop = `${thumbMargin}px`;
         }, 
     },    
@@ -481,7 +488,7 @@ let devaid = {
                     border-left: ${devaid.cfg.scrollbar.track_width} ${devaid.cfg.scrollbar.track_style} ${devaid.cfg.scrollbar.track_color};
                 }
                 #devaid-scrollbar-thumb {
-                    margin: -10px 0 0 -7.5px;
+                    margin: -9px 0 0 -7.5px;
                     width: 6px;
                     height: 6px;
                     border-radius: 50%;
